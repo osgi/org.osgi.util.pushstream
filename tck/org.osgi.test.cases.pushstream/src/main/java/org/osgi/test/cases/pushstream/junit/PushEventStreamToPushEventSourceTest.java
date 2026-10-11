@@ -17,11 +17,7 @@
  *******************************************************************************/
 package org.osgi.test.cases.pushstream.junit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,21 +75,21 @@ public class PushEventStreamToPushEventSourceTest {
 			
 		source.open(consumer);
 
-		assertTrue(latch.tryAcquire(5, TimeUnit.SECONDS));
-		assertEquals(100, list.size());
-		assertNull(failure.get());
+		assertThat(latch.tryAcquire(5, TimeUnit.SECONDS)).isTrue();
+		assertThat(list).hasSize(100);
+		assertThat(failure.get()).isNull();
 
 		list.clear();
 
 		// Check the terminal is remembered
 		source.open(consumer);
 		
-		assertTrue(latch.tryAcquire(500, TimeUnit.MILLISECONDS));
-		assertTrue(list.isEmpty());
-		assertNull(failure.get());
+		assertThat(latch.tryAcquire(500, TimeUnit.MILLISECONDS)).isTrue();
+		assertThat(list).isEmpty();
+		assertThat(failure.get()).isNull();
 
-		assertTrue(generator.fixedBackPressure());
-		assertEquals(20, generator.maxBackPressure());
+		assertThat(generator.fixedBackPressure()).isTrue();
+		assertThat(generator.maxBackPressure()).isEqualTo(20);
 	}
 
 	@Test
@@ -130,18 +126,18 @@ public class PushEventStreamToPushEventSourceTest {
 
 		source.open(consumer);
 
-		assertTrue(latch.tryAcquire(2, TimeUnit.SECONDS));
-		assertTrue(list.size() == 20);
-		assertTrue(list.get(0) == 0);
-		assertNull(failure.get());
+		assertThat(latch.tryAcquire(2, TimeUnit.SECONDS)).isTrue();
+		assertThat(list.size()).isEqualTo(20);
+		assertThat(list.get(0)).isEqualTo(0);
+		assertThat(failure.get()).isNull();
 
 		list.clear();
 
 		source.open(consumer);
-		assertTrue(latch.tryAcquire(2, TimeUnit.SECONDS));
-		assertTrue(list.size() == 20);
-		assertFalse(list.get(0) == 0);
-		assertNull(failure.get());
+		assertThat(latch.tryAcquire(2, TimeUnit.SECONDS)).isTrue();
+		assertThat(list.size()).isEqualTo(20);
+		assertThat(list.get(0)).isNotEqualTo(0);
+		assertThat(failure.get()).isNull();
 
 		list.clear();
 
@@ -149,10 +145,10 @@ public class PushEventStreamToPushEventSourceTest {
 		Thread.sleep(50);
 		stream.close();
 
-		assertTrue(latch.tryAcquire(1, TimeUnit.SECONDS));
-		assertFalse(list.isEmpty());
-		assertTrue(list.size() < 20);
-		assertNull(failure.get());
+		assertThat(latch.tryAcquire(1, TimeUnit.SECONDS)).isTrue();
+		assertThat(list.isEmpty()).isFalse();
+		assertThat(list.size() < 20).isTrue();
+		assertThat(failure.get()).isNull();
 	}
 
 	@Test
@@ -239,41 +235,41 @@ public class PushEventStreamToPushEventSourceTest {
 
 		// 3 should finish first with an error
 
-		assertTrue(latch3.tryAcquire(2, TimeUnit.SECONDS));
-		assertEquals(10, list3.size());
-		assertTrue(list3.get(0) > 1);
-		assertSame(re, failure3.get());
+		assertThat(latch3.tryAcquire(2, TimeUnit.SECONDS)).isTrue();
+		assertThat(list3).hasSize(10);
+		assertThat(list3.get(0)).isGreaterThan(1);
+		assertThat(failure3.get()).isSameAs(re);
 
-		assertFalse(latch1.tryAcquire());
-		assertFalse(latch2.tryAcquire());
+		assertThat(latch1.tryAcquire()).isFalse();
+		assertThat(latch2.tryAcquire()).isFalse();
 
 		// Next is consumer 2 with no error
 
-		assertTrue(latch2.tryAcquire(2, TimeUnit.SECONDS));
-		assertEquals(20, list2.size());
-		assertTrue(list2.get(0) > 1);
-		assertNull(failure2.get());
+		assertThat(latch2.tryAcquire(2, TimeUnit.SECONDS)).isTrue();
+		assertThat(list2).hasSize(20);
+		assertThat(list2.get(0)).isGreaterThan(1);
+		assertThat(failure2.get()).isNull();
 
-		assertFalse(latch1.tryAcquire());
+		assertThat(latch1.tryAcquire()).isFalse();
 
 		generator.getExecutionThread().interrupt();
 
-		assertTrue(latch1.tryAcquire(500, TimeUnit.MILLISECONDS));
-		assertFalse(list1.isEmpty());
-		assertTrue(list1.get(0) == 0);
-		assertTrue(list1.size() < 100);
-		assertTrue(failure1.get() instanceof InterruptedException);
+		assertThat(latch1.tryAcquire(500, TimeUnit.MILLISECONDS)).isTrue();
+		assertThat(list1.isEmpty()).isFalse();
+		assertThat(list1.get(0) == 0).isTrue();
+		assertThat(list1.size() < 100).isTrue();
+		assertThat(failure1.get() instanceof InterruptedException).isTrue();
 
-		assertFalse(generator.fixedBackPressure());
-		assertEquals(20, generator.minBackPressure());
-		assertTrue(generator.maxBackPressure() < 100);
-		assertTrue(generator.maxBackPressure() >= 80);
+		assertThat(generator.fixedBackPressure()).isFalse();
+		assertThat(generator.minBackPressure()).isEqualTo(20);
+		assertThat(generator.maxBackPressure() < 100).isTrue();
+		assertThat(generator.maxBackPressure() >= 80).isTrue();
 
 		Throwable ie = failure1.getAndSet(null);
 		source.open(consumer1);
 
-		assertTrue(latch1.tryAcquire(500, TimeUnit.MILLISECONDS));
-		assertSame(ie, failure1.get());
+		assertThat(latch1.tryAcquire(500, TimeUnit.MILLISECONDS)).isTrue();
+		assertThat(failure1.get()).isSameAs(ie);
 	}
 
 }

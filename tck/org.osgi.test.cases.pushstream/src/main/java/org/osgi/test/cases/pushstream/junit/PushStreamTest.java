@@ -21,7 +21,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.osgi.test.assertj.promise.PromiseAssert.assertThat;
 import static org.osgi.test.cases.pushstream.junit.PushStreamComplianceTest.PROMISE_RESOLVE_DURATION;
 import static org.osgi.util.pushstream.PushbackPolicyOption.LINEAR;
@@ -135,13 +135,11 @@ public class PushStreamTest {
 		es = impl.createStream(new Generator());
 		assertThat(es.max(Integer::compare))
 				.resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(9);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(9);
 		
 		es = impl.createStream(new Generator());
 		assertThat(es.findFirst()).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(0);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(0);
 		
 		es = impl.createStream(new Generator());
 		assertThat(es.reduce(0, (a, b) -> a + b))
@@ -339,7 +337,7 @@ public class PushStreamTest {
 				.limit(2)
 				.collect(toList());
 
-		assertTrue(latch.await(3, SECONDS));
+		assertThat(latch.await(3, SECONDS)).isTrue();
 		assertThat(counts).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasValueThat(InstanceOfAssertFactories.list(Integer.class))
 				.hasSize(2);
@@ -375,10 +373,9 @@ public class PushStreamTest {
 
 		Promise<Optional<Integer>> counts = impl.createStream(pes).findFirst();
 
-		assertTrue(latch.await(500, MILLISECONDS));
+		assertThat(latch.await(500, MILLISECONDS)).isTrue();
 		assertThat(counts).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(0);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(0);
 	}
 
 	@Test
@@ -417,12 +414,12 @@ public class PushStreamTest {
 
 		Promise<String> aggregate = midway.reduce("", String::concat);
 
-		assertTrue(s.tryAcquire(500, MILLISECONDS));
+		assertThat(s.tryAcquire(500, MILLISECONDS)).isTrue();
 		assertThat(aggregate).isNotDone();
 
 		midway.close();
 
-		assertTrue(s.tryAcquire(500, MILLISECONDS));
+		assertThat(s.tryAcquire(500, MILLISECONDS)).isTrue();
 
 		assertThat(aggregate).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasValueThat(InstanceOfAssertFactories.STRING)
@@ -468,7 +465,7 @@ public class PushStreamTest {
 		assertThat(aggregate).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasValueThat(InstanceOfAssertFactories.STRING)
 				.isEqualTo("12");
-		assertTrue(s.tryAcquire(500, MILLISECONDS));
+		assertThat(s.tryAcquire(500, MILLISECONDS)).isTrue();
 	}
 
 	@Test
@@ -504,7 +501,7 @@ public class PushStreamTest {
 
 		assertThat(aggregate).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasFailed();
-		assertTrue(s.tryAcquire(500, MILLISECONDS));
+		assertThat(s.tryAcquire(500, MILLISECONDS)).isTrue();
 	}
 
 	@Test
@@ -546,7 +543,7 @@ public class PushStreamTest {
 		assertThat(aggregate).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasValueThat(InstanceOfAssertFactories.STRING)
 				.isEqualTo("12");
-		assertTrue(s.tryAcquire(500, MILLISECONDS));
+		assertThat(s.tryAcquire(500, MILLISECONDS)).isTrue();
 
 	}
 
@@ -587,9 +584,8 @@ public class PushStreamTest {
 				.findFirst();
 
 		assertThat(aggregate).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(String.class))
-				.contains("12");
-		assertTrue(s.tryAcquire(500, MILLISECONDS));
+				.hasValueThat(InstanceOfAssertFactories.optional(String.class)).hasValue("12");
+		assertThat(s.tryAcquire(500, MILLISECONDS)).isTrue();
 
 	}
 
@@ -629,9 +625,8 @@ public class PushStreamTest {
 		merged.close();
 
 		assertThat(totalEvents).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.LONG)
-				.isEqualTo(0L);
-		assertTrue(s.tryAcquire(2, 500, MILLISECONDS));
+				.hasValueThat(InstanceOfAssertFactories.LONG).isZero();
+		assertThat(s.tryAcquire(2, 500, MILLISECONDS)).isTrue();
 
 	}
 }
