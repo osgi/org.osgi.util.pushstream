@@ -21,9 +21,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -87,10 +84,10 @@ public class SimplePushEventSourceTest {
 				.isStrictlyBetween(2500L, 4000L);
 
 		// The receiver should not yet be done!
-		assertEquals(0, latch.availablePermits());
+		assertThat(latch.availablePermits()).isZero();
 
 		// The receiver should finish after another 4.5 seconds
-		assertTrue(latch.tryAcquire(6, SECONDS));
+		assertThat(latch.tryAcquire(6, SECONDS)).isTrue();
 
 		assertThat(received).containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 				12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
@@ -99,12 +96,12 @@ public class SimplePushEventSourceTest {
 		received.clear();
 
 		// No more events should arrive
-		assertFalse(spes.isConnected());
+		assertThat(spes.isConnected()).isFalse();
 
 		spes.publish(Integer.valueOf(42));
 		spes.endOfStream();
 
-		assertFalse(latch.tryAcquire(3, SECONDS));
+		assertThat(latch.tryAcquire(3, SECONDS)).isFalse();
 
 		spes.open(pe -> {
 			if (pe.isTerminal()) {
@@ -115,7 +112,7 @@ public class SimplePushEventSourceTest {
 
 		spes.close();
 
-		assertTrue(latch.tryAcquire(100, MILLISECONDS));
+		assertThat(latch.tryAcquire(100, MILLISECONDS)).isTrue();
 	}
 
 }

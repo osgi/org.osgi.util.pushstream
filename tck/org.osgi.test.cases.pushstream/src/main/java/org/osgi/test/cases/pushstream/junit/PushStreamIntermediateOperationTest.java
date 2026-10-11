@@ -18,11 +18,7 @@
 package org.osgi.test.cases.pushstream.junit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.osgi.test.assertj.promise.PromiseAssert.assertThat;
 import static org.osgi.test.cases.pushstream.junit.PushStreamComplianceTest.PROMISE_RESOLVE_DURATION;
 
@@ -40,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
 
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -49,8 +44,8 @@ import org.osgi.test.cases.pushstream.junit.PushStreamComplianceTest.ExtGenerato
 import org.osgi.util.promise.Promise;
 import org.osgi.util.promise.Promises;
 import org.osgi.util.promise.TimeoutException;
-import org.osgi.util.pushstream.PushEvent;
 import org.osgi.util.pushstream.PushEvent.EventType;
+import org.osgi.util.pushstream.PushEvent;
 import org.osgi.util.pushstream.PushStream;
 import org.osgi.util.pushstream.PushStreamProvider;
 import org.osgi.util.pushstream.PushbackPolicyOption;
@@ -84,10 +79,10 @@ public class PushStreamIntermediateOperationTest {
 
 		// System.out.println(status);
 
-		assertNotNull(status);
-		assertTrue(status.failure == null);
-		assertThat(status.bp).isEqualTo(0L);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
+		assertThat(status.bp).isZero();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 
 		// close method called
 		gen = new ExtGenerator(5);
@@ -103,10 +98,10 @@ public class PushStreamIntermediateOperationTest {
 
 		// System.out.println(status);
 
-		assertNotNull(status);
-		assertTrue(status.failure == null);
-		assertThat(status.bp).isEqualTo(0L);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
+		assertThat(status.bp).isZero();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 
 		// throw Exception
 		String message = "Check error processing";
@@ -123,11 +118,11 @@ public class PushStreamIntermediateOperationTest {
 
 		// System.out.println(status);
 
-		assertNotNull(status);
-		assertTrue(status.failure != null);
-		assertThat(status.bp).isEqualTo(0L);
-		assertEquals(PushEvent.EventType.ERROR, status.event.getType());
-		assertEquals(message, status.event.getFailure().getMessage());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNotNull();
+		assertThat(status.bp).isZero();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.ERROR);
+		assertThat(status.event.getFailure().getMessage()).isEqualTo(message);
 
 		// returned negative back pressure
 		gen = new ExtGenerator(5);
@@ -141,10 +136,10 @@ public class PushStreamIntermediateOperationTest {
 		status = gen.status();
 		// System.out.println(status);
 
-		assertNotNull(status);
-		assertTrue(status.failure == null);
-		assertThat(status.bp).isLessThan(0L);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
+		assertThat(status.bp).isNegative();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 
 		// returned positive back pressure
 		gen = new ExtGenerator(5);
@@ -160,12 +155,12 @@ public class PushStreamIntermediateOperationTest {
 		status = gen.status();
 		// System.out.println(status);
 
-		assertNotNull(status);
-		assertTrue(status.failure == null);
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
 		assertThat(status.bp).isEqualTo(200L);
 		assertThat(TimeUnit.NANOSECONDS.toMillis(end - start))
 				.isGreaterThanOrEqualTo(1000L);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 
 	}
 
@@ -194,9 +189,9 @@ public class PushStreamIntermediateOperationTest {
 			return i % 3 == 0;
 		}).toArray();
 
-		assertThatIllegalStateException().isThrownBy(() -> ps.map((i) -> {
+		assertThatThrownBy(() -> ps.map((i) -> {
 			return i * 2;
-		}).toArray());
+		}).toArray()).isInstanceOf(IllegalStateException.class);
 
 		gen.getExecutionThread().join();
 	}
@@ -262,12 +257,12 @@ public class PushStreamIntermediateOperationTest {
 		// backpressure
 		ExtGeneratorStatus status = gen.status();
 
-		assertNotNull(status);
-		assertTrue(status.failure == null);
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
 
-		// TODO assertTrue(status.bp < 0);
-		assertTrue(gen.closeCalled || status.bp < 0);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		// TODO assertThat(status.bp < 0).isTrue();
+		assertThat(gen.closeCalled || status.bp < 0).isTrue();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 	
 	/**
@@ -336,10 +331,10 @@ public class PushStreamIntermediateOperationTest {
 		// backpressure
 		ExtGeneratorStatus status = gen.status();
 
-		assertNotNull(status);
-		assertTrue(status.failure == null);
-		assertTrue(gen.closeCalled || status.bp < 0);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
+		assertThat(gen.closeCalled || status.bp < 0).isTrue();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 
 	/**
@@ -407,10 +402,10 @@ public class PushStreamIntermediateOperationTest {
 		// backpressure
 		ExtGeneratorStatus status = gen.status();
 
-		assertNotNull(status);
-		assertTrue(status.failure == null);
-		assertTrue(gen.closeCalled || status.bp < 0);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
+		assertThat(gen.closeCalled || status.bp < 0).isTrue();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 
 	/**
@@ -522,11 +517,11 @@ public class PushStreamIntermediateOperationTest {
 				.containsExactly(0, 1);
 		gen.thread.join();
 
-		assertTrue(gen.closeCalled);
+		assertThat(gen.closeCalled).isTrue();
 		ExtGeneratorStatus status = gen.status();
-		assertNotNull(status);
-		assertNull(status.failure);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 
 	}
 
@@ -554,10 +549,10 @@ public class PushStreamIntermediateOperationTest {
 		// long elapse = (gen.stop - gen.start);
 		// System.out.println(elapse + " : " + Arrays.toString(p.getValue()));
 		ExtGeneratorStatus status = gen.status();
-		assertNotNull(status);
-		assertNull(status.failure);
-		assertTrue(gen.closeCalled);
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status).isNotNull();
+		assertThat(status.failure).isNull();
+		assertThat(gen.closeCalled).isTrue();
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 
 	/**
@@ -598,9 +593,9 @@ public class PushStreamIntermediateOperationTest {
 
 		gen.getExecutionThread().join();
 		ExtGeneratorStatus status = gen.status();
-		assertNotNull(status);
-		assertNotNull(failure[0]);
-		assertEquals(TimeoutException.class, failure[0].getClass());
+		assertThat(status).isNotNull();
+		assertThat(failure[0]).isNotNull();
+		assertThat(failure[0].getClass()).isEqualTo(TimeoutException.class);
 
 		// There is always a race between the timeout and the next event
 		// because that is the purpose of a timeout! This means the generator
@@ -609,7 +604,7 @@ public class PushStreamIntermediateOperationTest {
 		// Also, the thread safety in the generator may not be 100%, so we may
 		// see a close call after stopping. In any event, all we care is that
 		// a stop actually is propagated back.
-		assertTrue(gen.closeCalled || status.event.getType() == EventType.DATA);
+		assertThat(gen.closeCalled || status.event.getType() == EventType.DATA).isTrue();
 	}
 
 	/**
@@ -856,8 +851,7 @@ public class PushStreamIntermediateOperationTest {
 		gen.getExecutionThread().join();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(45);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(45);
 		// multi-threading
 		assertThat(executor.getLargestPoolSize()).isGreaterThan(1)
 				// no blocking threads in fork
@@ -934,16 +928,15 @@ public class PushStreamIntermediateOperationTest {
 		gen.getExecutionThread().join();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(45);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(45);
 		// if threads have been blocked the back pressure must have
 		// been changed during processing
 		assertThat(gen.fixedBackPressure()).isFalse();
 		// n+1 seems to be OK and n not
-		// assertEquals(6, executor.getLargestPoolSize());
+		// assertThat(executor.getLargestPoolSize()).isEqualTo(6);
 		assertThat(executor.getLargestPoolSize()).isBetween(5, 6);
 		ExtGeneratorStatus status = gen.status();
-		assertThat(status.bp).isGreaterThan(0L);
+		assertThat(status.bp).isPositive();
 		// thread overlapping in reduce
 		assertThat(threadCount).hasPositiveValue();
 	}
@@ -985,8 +978,7 @@ public class PushStreamIntermediateOperationTest {
 
 		for (Integer o : p.getValue()) {
 			if (!one.add(o)) {
-				assertTrue(two.add(o),
-						"Object " + o + " was present three times");
+				assertThat(two.add(o)).as("Object " + o + " was present three times").isTrue();
 			}
 		}
 
@@ -1325,8 +1317,7 @@ public class PushStreamIntermediateOperationTest {
 		ExtGeneratorStatus status = gen.status();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(45);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(45);
 
 		assertThat(gen.fixedBackPressure()).isTrue();
 		assertThat(status.bp).isEqualTo(150L);
@@ -1404,8 +1395,7 @@ public class PushStreamIntermediateOperationTest {
 		ExtGeneratorStatus status = gen.status();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(45);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(45);
 
 		assertThat(gen.fixedBackPressure()).isFalse();
 		assertThat(gen.maxBackPressure()).isEqualTo(250L);
@@ -1476,12 +1466,11 @@ public class PushStreamIntermediateOperationTest {
 				.reduce(bo);
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(45);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(45);
 
 		assertThat(gen.fixedBackPressure()).isFalse();
 		assertThat(gen.maxBackPressure()).isEqualTo(250L);
-		assertThat(gen.minBackPressure()).isEqualTo(0L);
+		assertThat(gen.minBackPressure()).isZero();
 	}
 
 	/**
@@ -1556,11 +1545,10 @@ public class PushStreamIntermediateOperationTest {
 		ExtGeneratorStatus status = gen.status();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(45);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(45);
 
 		assertThat(gen.fixedBackPressure()).isFalse();
-		assertThat(gen.minBackPressure()).isEqualTo(0L);
+		assertThat(gen.minBackPressure()).isZero();
 	}
 
 	/**
@@ -1633,11 +1621,10 @@ public class PushStreamIntermediateOperationTest {
 		ExtGeneratorStatus status = gen.status();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(66);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(66);
 
 		assertThat(gen.fixedBackPressure()).isFalse();
-		assertThat(gen.minBackPressure()).isEqualTo(0L);
+		assertThat(gen.minBackPressure()).isZero();
 		assertThat(gen.maxBackPressure()).isEqualTo(37L);
 	}
 
@@ -1711,11 +1698,10 @@ public class PushStreamIntermediateOperationTest {
 		ExtGeneratorStatus status = gen.status();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(66);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(66);
 
 		assertThat(gen.fixedBackPressure()).isFalse();
-		assertThat(gen.minBackPressure()).isEqualTo(0L);
+		assertThat(gen.minBackPressure()).isZero();
 		assertThat(gen.maxBackPressure()).isEqualTo(8L);
 	}
 
@@ -1789,11 +1775,10 @@ public class PushStreamIntermediateOperationTest {
 		ExtGeneratorStatus status = gen.status();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(66);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(66);
 
 		assertThat(gen.fixedBackPressure()).isFalse();
-		assertThat(gen.minBackPressure()).isEqualTo(0L);
+		assertThat(gen.minBackPressure()).isZero();
 		assertThat(gen.maxBackPressure()).isEqualTo(40L);
 	}
 
@@ -1807,10 +1792,10 @@ public class PushStreamIntermediateOperationTest {
 	@Test
 	public void testThresholdPushbackPolicyIllegalArgumentThreshold()
 			throws Exception {
-		Assertions.assertThatIllegalArgumentException().isThrownBy(() -> {
+		assertThatThrownBy(() -> {
 			ThresholdPushbackPolicy.createThresholdPushbackPolicy(-1, 1L,
 					1L);
-		});
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	/**
@@ -1822,9 +1807,9 @@ public class PushStreamIntermediateOperationTest {
 	@Test
 	public void testThresholdPushbackPolicyIllegalArgumentInitial()
 			throws Exception {
-		Assertions.assertThatIllegalArgumentException().isThrownBy(() -> {
+		assertThatThrownBy(() -> {
 			ThresholdPushbackPolicy.createThresholdPushbackPolicy(1, -1L, 1L);
-		});
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	/**
@@ -1836,9 +1821,9 @@ public class PushStreamIntermediateOperationTest {
 	@Test
 	public void testThresholdPushbackPolicyIllegalArgumentStep()
 			throws Exception {
-		Assertions.assertThatIllegalArgumentException().isThrownBy(() -> {
+		assertThatThrownBy(() -> {
 			ThresholdPushbackPolicy.createThresholdPushbackPolicy(1, 1L, -11L);
-		});
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	/**
@@ -1911,11 +1896,10 @@ public class PushStreamIntermediateOperationTest {
 		ExtGeneratorStatus status = gen.status();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(66);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(66);
 
 		assertThat(gen.fixedBackPressure()).isFalse();
-		assertThat(gen.minBackPressure()).isEqualTo(0L);
+		assertThat(gen.minBackPressure()).isZero();
 		assertThat(gen.maxBackPressure()).isEqualTo(10L);
 	}
 
@@ -1956,14 +1940,14 @@ public class PushStreamIntermediateOperationTest {
 		gen.getExecutionThread().join();
 
 		ExtGeneratorStatus status = gen.status;
-		assertNotNull(status);
+		assertThat(status).isNotNull();
 		// [15, 13, 17, 21, 12, 13, 14, 15, 16, 17, 18, 19] expected
 		assertThat(pr).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasValueThat(InstanceOfAssertFactories.array(Integer[].class))
 				.containsExactly(15, 13, 17, 21, 12, 13, 14, 15, 16, 17, 18,
 						19);
 		assertThat(gen.closeCalled).isTrue();
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 
 	/**
@@ -2012,13 +1996,13 @@ public class PushStreamIntermediateOperationTest {
 		gen.getExecutionThread().join();
 
 		ExtGeneratorStatus status = gen.status;
-		assertNotNull(status);
+		assertThat(status).isNotNull();
 
 		assertThat(pr).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasValueThat(InstanceOfAssertFactories.array(Integer[].class))
 				.containsExactly(0);
 		assertThat(gen.closeCalled).isTrue();
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 
 	/**
@@ -2050,15 +2034,15 @@ public class PushStreamIntermediateOperationTest {
 		gen.getExecutionThread().join();
 
 		ExtGeneratorStatus status = gen.status;
-		assertNotNull(status);
+		assertThat(status).isNotNull();
 
-		assertThat(gen.maxBackPressure).isEqualTo(0L);
+		assertThat(gen.maxBackPressure).isZero();
 		assertThat(pr).resolvesWithin(PROMISE_RESOLVE_DURATION)
 				.hasValueThat(InstanceOfAssertFactories.array(Integer[].class))
 				.isNotEmpty();
 		System.out.println(Arrays.toString(pr.getValue()));
 		assertThat(gen.closeCalled).isTrue();
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 
 	/**
@@ -2095,9 +2079,9 @@ public class PushStreamIntermediateOperationTest {
 		gen.getExecutionThread().join();
 
 		ExtGeneratorStatus status = gen.status;
-		assertNotNull(status);
+		assertThat(status).isNotNull();
 
-		assertThat(gen.minBackPressure).isEqualTo(0L);
+		assertThat(gen.minBackPressure).isZero();
 		// We should get a max back pressure close to, but no more than 200
 		assertThat(gen.maxBackPressure).isLessThanOrEqualTo(200L)
 				.isGreaterThan(160L);
@@ -2107,7 +2091,7 @@ public class PushStreamIntermediateOperationTest {
 				.hasValueThat(InstanceOfAssertFactories.array(Integer[].class))
 				.hasSizeGreaterThanOrEqualTo(100);
 		assertThat(gen.closeCalled).isTrue();
-		assertEquals(PushEvent.EventType.CLOSE, status.event.getType());
+		assertThat(status.event.getType()).isEqualTo(PushEvent.EventType.CLOSE);
 	}
 
 	/**
@@ -2183,7 +2167,7 @@ public class PushStreamIntermediateOperationTest {
 		gen.getExecutionThread().join();
 
 		assertThat(gen.fixedBackPressure()).isFalse();
-		assertThat(gen.minBackPressure()).isEqualTo(0L);
+		assertThat(gen.minBackPressure()).isZero();
 		assertThat(gen.maxBackPressure()).isEqualTo(110L);
 	}
 }

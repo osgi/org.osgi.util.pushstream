@@ -233,8 +233,7 @@ public class PushStreamTerminalOperationTest {
 		gen.getExecutionThread().join();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(10);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(10);
 
 		assertThat(gen.fixedBackPressure()).isTrue();
 	}
@@ -323,8 +322,7 @@ public class PushStreamTerminalOperationTest {
 		gen.getExecutionThread().join();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(0);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(0);
 	}
 
 	/**
@@ -348,8 +346,7 @@ public class PushStreamTerminalOperationTest {
 		gen.getExecutionThread().join();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(4);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(4);
 	}
 
 	/**
@@ -486,8 +483,7 @@ public class PushStreamTerminalOperationTest {
 		gen.getExecutionThread().join();
 
 		assertThat(p).resolvesWithin(PROMISE_RESOLVE_DURATION)
-				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class))
-				.contains(0);
+				.hasValueThat(InstanceOfAssertFactories.optional(Integer.class)).hasValue(0);
 
 		gen = new ExtGenerator(0);
 		ps = new PushStreamProvider().createStream(gen);
